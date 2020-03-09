@@ -5,7 +5,3 @@
 - useRef
 - useReducer
 - useContext
-
-
-### Next + GraphQL
-- WIP
