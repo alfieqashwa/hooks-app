@@ -1,0 +1,112 @@
+import React from "react";
+
+const INITIALSTATE = [
+  { id: 1, task: "Learn ReactJS", completed: false },
+  { id: 2, task: "Learn GraphQL", completed: false },
+  { id: 3, task: "Learn Rust", completed: false }
+];
+
+const TodoContext = React.createContext();
+
+function reducer(todos, action) {
+  switch (action.type) {
+    case "ADD":
+      return [
+        ...todos,
+        { id: todos.length + 1, task: action.task, completed: false }
+      ];
+    case "TOGGLE_COMPLETE":
+      return todos.filter(todo => {
+        if (todo.id === action.id) {
+          todo.completed = !todo.completed;
+        }
+        return todo;
+      });
+    case "REMOVE":
+      return todos.filter(todo => todo.id !== action.id);
+    case "CLEAR_ALL":
+      return [];
+    default:
+      throw new Error();
+  }
+}
+
+export default function Todo() {
+  const [todos, dispatch] = React.useReducer(reducer, INITIALSTATE);
+  const inputRef = React.useRef();
+
+  const onSubmit = e => {
+    e.preventDefault();
+    dispatch({ type: "ADD", task: inputRef.current.value });
+    inputRef.current.value = "";
+  };
+
+  return (
+    <div>
+      <h1>Todo List</h1>
+      <TodoContext.Provider
+        value={{
+          todos,
+          dispatch,
+          inputRef,
+          onSubmit
+        }}
+      >
+        <TodoInput />
+        <TodoList />
+      </TodoContext.Provider>
+    </div>
+  );
+}
+
+function TodoInput() {
+  const { inputRef, onSubmit } = React.useContext(TodoContext);
+  return (
+    <form onSubmit={onSubmit}>
+      <input ref={inputRef} />
+      <button type="submit">Add New Task</button>
+    </form>
+  );
+}
+
+function TodoList() {
+  const { todos, dispatch } = React.useContext(TodoContext);
+  return (
+    <div>
+      <ul style={{ listStyle: "none" }}>
+        {todos.map(todo => (
+          <li key={todo.id}>
+            <span
+              style={{ textDecoration: todo.completed && "line-through" }}
+              onClick={() => dispatch({ type: "TOGGLE_COMPLETE", id: todo.id })}
+            >
+              {todo.task}
+            </span>
+            <button
+              type="button"
+              onClick={() => dispatch({ type: "REMOVE", id: todo.id })}
+            >
+              &times;
+            </button>
+          </li>
+        ))}
+      </ul>
+      <TodoButton />
+    </div>
+  );
+}
+
+function TodoButton() {
+  const { todos, dispatch } = React.useContext(TodoContext);
+  return (
+    <>
+      {todos.length ? (
+        <button type="button" onClick={dispatch({ type: "CLEAR_ALL" })}>
+          Clear All
+        </button>
+      ) : (
+        <div> Let's add new tasks...</div>
+      )}
+    </>
+  );
+}
